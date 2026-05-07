@@ -100,14 +100,18 @@ public class LearningAssistantRepository {
     }
 
     public LearningProfile saveProfile(LearningProfile profile) {
-        jdbc.update("""
-                INSERT INTO learning_profiles (user_id, goal, level, daily_target_minutes)
-                VALUES (?, ?, ?, ?)
-                ON DUPLICATE KEY UPDATE
-                    goal = VALUES(goal),
-                    level = VALUES(level),
-                    daily_target_minutes = VALUES(daily_target_minutes)
-                """, profile.getUserId(), profile.getGoal(), profile.getLevel(), profile.getDailyTargetMinutes());
+        if (existsById("learning_profiles", "user_id", profile.getUserId())) {
+            jdbc.update("""
+                    UPDATE learning_profiles
+                    SET goal = ?, level = ?, daily_target_minutes = ?
+                    WHERE user_id = ?
+                    """, profile.getGoal(), profile.getLevel(), profile.getDailyTargetMinutes(), profile.getUserId());
+        } else {
+            jdbc.update("""
+                    INSERT INTO learning_profiles (user_id, goal, level, daily_target_minutes)
+                    VALUES (?, ?, ?, ?)
+                    """, profile.getUserId(), profile.getGoal(), profile.getLevel(), profile.getDailyTargetMinutes());
+        }
         replaceStrings("profile_interests", "interest", "user_id", profile.getUserId(), profile.getInterests());
         replaceStrings("profile_weak_points", "weak_point", "user_id", profile.getUserId(), profile.getWeakPoints());
         return profile;
@@ -148,15 +152,16 @@ public class LearningAssistantRepository {
                 return statement;
             }, keyHolder);
             course.setId(keyHolder.getKey().longValue());
+        } else if (existsById("course_units", "id", course.getId())) {
+            jdbc.update("""
+                    UPDATE course_units
+                    SET title = ?, subject = ?, difficulty = ?, summary = ?
+                    WHERE id = ?
+                    """, course.getTitle(), course.getSubject(), course.getDifficulty(), course.getSummary(), course.getId());
         } else {
             jdbc.update("""
                     INSERT INTO course_units (id, title, subject, difficulty, summary)
                     VALUES (?, ?, ?, ?, ?)
-                    ON DUPLICATE KEY UPDATE
-                        title = VALUES(title),
-                        subject = VALUES(subject),
-                        difficulty = VALUES(difficulty),
-                        summary = VALUES(summary)
                     """, course.getId(), course.getTitle(), course.getSubject(), course.getDifficulty(), course.getSummary());
         }
         replaceStrings("course_objectives", "objective", "course_id", course.getId(), course.getObjectives());
@@ -210,15 +215,16 @@ public class LearningAssistantRepository {
                 return statement;
             }, keyHolder);
             exercise.setId(keyHolder.getKey().longValue());
+        } else if (existsById("exercises", "id", exercise.getId())) {
+            jdbc.update("""
+                    UPDATE exercises
+                    SET course_id = ?, question = ?, answer = ?, explanation = ?
+                    WHERE id = ?
+                    """, exercise.getCourseId(), exercise.getQuestion(), exercise.getAnswer(), exercise.getExplanation(), exercise.getId());
         } else {
             jdbc.update("""
                     INSERT INTO exercises (id, course_id, question, answer, explanation)
                     VALUES (?, ?, ?, ?, ?)
-                    ON DUPLICATE KEY UPDATE
-                        course_id = VALUES(course_id),
-                        question = VALUES(question),
-                        answer = VALUES(answer),
-                        explanation = VALUES(explanation)
                     """, exercise.getId(), exercise.getCourseId(), exercise.getQuestion(), exercise.getAnswer(), exercise.getExplanation());
         }
         replaceStrings("exercise_options", "option_text", "exercise_id", exercise.getId(), exercise.getOptions());
@@ -297,17 +303,17 @@ public class LearningAssistantRepository {
                 return statement;
             }, keyHolder);
             plan.setId(keyHolder.getKey().longValue());
+        } else if (existsById("learning_plans", "id", plan.getId())) {
+            jdbc.update("""
+                    UPDATE learning_plans
+                    SET user_id = ?, title = ?, start_date = ?, end_date = ?, progress = ?
+                    WHERE id = ?
+                    """, plan.getUserId(), plan.getTitle(), Date.valueOf(plan.getStartDate()), Date.valueOf(plan.getEndDate()), plan.getProgress(), plan.getId());
         } else {
             jdbc.update("""
                     INSERT INTO learning_plans (id, user_id, title, start_date, end_date, progress)
                     VALUES (?, ?, ?, ?, ?, ?)
-                    ON DUPLICATE KEY UPDATE
-                        user_id = VALUES(user_id),
-                        title = VALUES(title),
-                        start_date = VALUES(start_date),
-                        end_date = VALUES(end_date),
-                        progress = VALUES(progress)
-                    """, plan.getId(), plan.getUserId(), plan.getTitle(), plan.getStartDate(), plan.getEndDate(), plan.getProgress());
+                    """, plan.getId(), plan.getUserId(), plan.getTitle(), Date.valueOf(plan.getStartDate()), Date.valueOf(plan.getEndDate()), plan.getProgress());
         }
         replaceStrings("plan_tasks", "task", "plan_id", plan.getId(), plan.getTasks());
         return plan;
@@ -346,15 +352,16 @@ public class LearningAssistantRepository {
                 return statement;
             }, keyHolder);
             item.setId(keyHolder.getKey().longValue());
+        } else if (existsById("knowledge_items", "id", item.getId())) {
+            jdbc.update("""
+                    UPDATE knowledge_items
+                    SET title = ?, category = ?, content = ?, updated_at = ?
+                    WHERE id = ?
+                    """, item.getTitle(), item.getCategory(), item.getContent(), Timestamp.valueOf(updatedAt), item.getId());
         } else {
             jdbc.update("""
                     INSERT INTO knowledge_items (id, title, category, content, updated_at)
                     VALUES (?, ?, ?, ?, ?)
-                    ON DUPLICATE KEY UPDATE
-                        title = VALUES(title),
-                        category = VALUES(category),
-                        content = VALUES(content),
-                        updated_at = VALUES(updated_at)
                     """, item.getId(), item.getTitle(), item.getCategory(), item.getContent(), Timestamp.valueOf(updatedAt));
         }
         return item;
@@ -395,17 +402,16 @@ public class LearningAssistantRepository {
                 return statement;
             }, keyHolder);
             config.setId(keyHolder.getKey().longValue());
+        } else if (existsById("agent_configs", "id", config.getId())) {
+            jdbc.update("""
+                    UPDATE agent_configs
+                    SET name = ?, responsibility = ?, model_name = ?, temperature = ?, status = ?, updated_at = ?
+                    WHERE id = ?
+                    """, config.getName(), config.getResponsibility(), config.getModelName(), config.getTemperature(), config.getStatus(), Timestamp.valueOf(updatedAt), config.getId());
         } else {
             jdbc.update("""
                     INSERT INTO agent_configs (id, name, responsibility, model_name, temperature, status, updated_at)
                     VALUES (?, ?, ?, ?, ?, ?, ?)
-                    ON DUPLICATE KEY UPDATE
-                        name = VALUES(name),
-                        responsibility = VALUES(responsibility),
-                        model_name = VALUES(model_name),
-                        temperature = VALUES(temperature),
-                        status = VALUES(status),
-                        updated_at = VALUES(updated_at)
                     """, config.getId(), config.getName(), config.getResponsibility(), config.getModelName(), config.getTemperature(), config.getStatus(), Timestamp.valueOf(updatedAt));
         }
         return config;
@@ -470,5 +476,10 @@ public class LearningAssistantRepository {
             jdbc.update("INSERT INTO " + tableName + " (" + ownerColumn + ", " + valueColumn + ", position) VALUES (?, ?, ?)",
                     ownerId, safeValues.get(i), i);
         }
+    }
+
+    private boolean existsById(String tableName, String idColumn, Long id) {
+        Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM " + tableName + " WHERE " + idColumn + " = ?", Integer.class, id);
+        return count != null && count > 0;
     }
 }

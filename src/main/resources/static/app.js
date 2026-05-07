@@ -63,6 +63,21 @@ async function loadUsers() {
     `).join("");
 }
 
+async function createUser() {
+    await api("/api/users", {
+        method: "POST",
+        body: JSON.stringify({
+            username: document.querySelector("#newUsernameInput").value,
+            displayName: document.querySelector("#newDisplayNameInput").value,
+            role: document.querySelector("#newRoleInput").value,
+            status: "ACTIVE"
+        })
+    });
+    document.querySelector("#newUsernameInput").value = "";
+    document.querySelector("#newDisplayNameInput").value = "";
+    await Promise.all([loadUsers(), loadDashboard(), loadAuditLogs()]);
+}
+
 async function updateUserStatus(event) {
     const button = event.target.closest("button[data-user-status]");
     if (!button) return;
@@ -88,6 +103,23 @@ async function loadAgentConfigs() {
             </article>
         `).join("")
         : renderItem("智能体配置", "暂无配置记录。");
+}
+
+async function saveAgentConfig() {
+    await api("/api/admin/agent-configs", {
+        method: "POST",
+        body: JSON.stringify({
+            name: document.querySelector("#agentNameInput").value,
+            responsibility: document.querySelector("#agentResponsibilityInput").value,
+            modelName: document.querySelector("#agentModelInput").value || "rule-based-agent",
+            temperature: Number(document.querySelector("#agentTemperatureInput").value || 0.5),
+            status: "ACTIVE"
+        })
+    });
+    document.querySelector("#agentNameInput").value = "";
+    document.querySelector("#agentModelInput").value = "";
+    document.querySelector("#agentResponsibilityInput").value = "";
+    await Promise.all([loadAgentConfigs(), loadDashboard(), loadAuditLogs()]);
 }
 
 async function updateAgentStatus(event) {
@@ -148,9 +180,27 @@ async function loadProgress() {
 
 async function loadCourses() {
     const courses = await api("/api/courses");
-    document.querySelector("#courseFilter").innerHTML = `<option value="">全部课程</option>` + courses.map(course => `<option value="${course.id}">${course.title}</option>`).join("");
-    document.querySelector("#courseList").innerHTML = courses.map(course => renderItem(course.title, course.summary, `${course.subject} / ${course.difficulty}`)).join("");
+    const options = `<option value="">全部课程</option>` + courses.map(course => `<option value="${course.id}">${course.title}</option>`).join("");
+    document.querySelector("#courseFilter").innerHTML = options;
+    document.querySelector("#exerciseCourseInput").innerHTML = courses.map(course => `<option value="${course.id}">${course.title}</option>`).join("");
+    document.querySelector("#courseList").innerHTML = courses.map(course => renderItem(course.title, course.summary, `${course.subject} / ${course.difficulty} / 目标：${joinText(course.objectives)}`)).join("");
     await loadExercises();
+}
+
+async function saveCourse() {
+    await api("/api/courses", {
+        method: "POST",
+        body: JSON.stringify({
+            title: document.querySelector("#courseTitleInput").value,
+            subject: document.querySelector("#courseSubjectInput").value,
+            difficulty: document.querySelector("#courseDifficultyInput").value,
+            summary: document.querySelector("#courseSummaryInput").value,
+            objectives: splitInput(document.querySelector("#courseObjectivesInput").value)
+        })
+    });
+    ["#courseTitleInput", "#courseSubjectInput", "#courseDifficultyInput", "#courseSummaryInput", "#courseObjectivesInput"]
+        .forEach(selector => document.querySelector(selector).value = "");
+    await Promise.all([loadCourses(), loadDashboard(), loadAuditLogs()]);
 }
 
 async function loadExercises() {
@@ -165,6 +215,22 @@ async function loadExercises() {
             <p class="meta" id="result-${exercise.id}"></p>
         </article>
     `).join("");
+}
+
+async function saveExercise() {
+    await api("/api/exercises", {
+        method: "POST",
+        body: JSON.stringify({
+            courseId: Number(document.querySelector("#exerciseCourseInput").value),
+            question: document.querySelector("#exerciseQuestionInput").value,
+            options: splitInput(document.querySelector("#exerciseOptionsInput").value),
+            answer: document.querySelector("#exerciseAnswerInput").value,
+            explanation: document.querySelector("#exerciseExplanationInput").value
+        })
+    });
+    ["#exerciseQuestionInput", "#exerciseOptionsInput", "#exerciseAnswerInput", "#exerciseExplanationInput"]
+        .forEach(selector => document.querySelector(selector).value = "");
+    await Promise.all([loadExercises(), loadDashboard(), loadAuditLogs()]);
 }
 
 async function submitExercise(event) {
@@ -212,6 +278,20 @@ async function searchKnowledge() {
     document.querySelector("#knowledgeList").innerHTML = items.map(item => renderItem(item.title, item.content, item.category)).join("");
 }
 
+async function saveKnowledge() {
+    await api("/api/knowledge", {
+        method: "POST",
+        body: JSON.stringify({
+            title: document.querySelector("#knowledgeTitleInput").value,
+            category: document.querySelector("#knowledgeCategoryInput").value,
+            content: document.querySelector("#knowledgeContentInput").value
+        })
+    });
+    document.querySelector("#knowledgeKeyword").value = document.querySelector("#knowledgeTitleInput").value || "Java";
+    ["#knowledgeTitleInput", "#knowledgeCategoryInput", "#knowledgeContentInput"].forEach(selector => document.querySelector(selector).value = "");
+    await Promise.all([searchKnowledge(), loadDashboard(), loadAuditLogs()]);
+}
+
 async function askAgents() {
     const reply = await api("/api/agents/ask", {
         method: "POST",
@@ -257,6 +337,11 @@ document.querySelector("#userList").addEventListener("click", updateUserStatus);
 document.querySelector("#refreshAgentsBtn").addEventListener("click", loadAgentConfigs);
 document.querySelector("#agentConfigList").addEventListener("click", updateAgentStatus);
 document.querySelector("#refreshAuditBtn").addEventListener("click", loadAuditLogs);
+document.querySelector("#createUserBtn").addEventListener("click", createUser);
+document.querySelector("#saveCourseBtn").addEventListener("click", saveCourse);
+document.querySelector("#saveExerciseBtn").addEventListener("click", saveExercise);
+document.querySelector("#saveKnowledgeBtn").addEventListener("click", saveKnowledge);
+document.querySelector("#saveAgentConfigBtn").addEventListener("click", saveAgentConfig);
 
 login().catch(error => {
     document.body.insertAdjacentHTML("afterbegin", `<div class="error">${error.message}</div>`);

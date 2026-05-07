@@ -68,7 +68,23 @@
                 <h2>课程与练习</h2>
                 <select id="courseFilter"></select>
             </div>
+            <div class="admin-form">
+                <input id="courseTitleInput" type="text" placeholder="课程名称">
+                <input id="courseSubjectInput" type="text" placeholder="学科方向">
+                <input id="courseDifficultyInput" type="text" placeholder="难度">
+                <input id="courseObjectivesInput" type="text" placeholder="课程目标，逗号分隔">
+                <textarea id="courseSummaryInput" rows="2" placeholder="课程简介"></textarea>
+                <button id="saveCourseBtn">新增课程</button>
+            </div>
             <div id="courseList" class="list"></div>
+            <div class="admin-form">
+                <select id="exerciseCourseInput"></select>
+                <input id="exerciseQuestionInput" type="text" placeholder="练习题目">
+                <input id="exerciseOptionsInput" type="text" placeholder="选项，逗号分隔">
+                <input id="exerciseAnswerInput" type="text" placeholder="正确答案">
+                <textarea id="exerciseExplanationInput" rows="2" placeholder="答案解析"></textarea>
+                <button id="saveExerciseBtn">新增练习</button>
+            </div>
             <div id="exerciseList" class="list compact"></div>
         </div>
 
@@ -88,6 +104,12 @@
                 <button id="searchKnowledgeBtn">检索</button>
             </div>
             <label>关键词 <input id="knowledgeKeyword" type="text" value="Java"></label>
+            <div class="admin-form">
+                <input id="knowledgeTitleInput" type="text" placeholder="知识标题">
+                <input id="knowledgeCategoryInput" type="text" placeholder="分类">
+                <textarea id="knowledgeContentInput" rows="3" placeholder="知识内容"></textarea>
+                <button id="saveKnowledgeBtn">新增知识</button>
+            </div>
             <div id="knowledgeList" class="list"></div>
         </div>
 
@@ -95,6 +117,15 @@
             <div class="panel-title">
                 <h2>用户管理</h2>
                 <button id="refreshUsersBtn">刷新</button>
+            </div>
+            <div class="admin-form">
+                <input id="newUsernameInput" type="text" placeholder="用户名">
+                <input id="newDisplayNameInput" type="text" placeholder="显示名称">
+                <select id="newRoleInput">
+                    <option value="LEARNER">学习者</option>
+                    <option value="ADMIN">管理员</option>
+                </select>
+                <button id="createUserBtn">新增用户</button>
             </div>
             <div id="userList" class="list compact"></div>
         </div>
@@ -105,6 +136,13 @@
             <div class="panel-title">
                 <h2>智能体配置</h2>
                 <button id="refreshAgentsBtn">刷新</button>
+            </div>
+            <div class="admin-form">
+                <input id="agentNameInput" type="text" placeholder="智能体名称">
+                <input id="agentModelInput" type="text" placeholder="模型名称">
+                <input id="agentTemperatureInput" type="number" min="0" max="1" step="0.1" value="0.5" placeholder="温度">
+                <textarea id="agentResponsibilityInput" rows="2" placeholder="职责说明"></textarea>
+                <button id="saveAgentConfigBtn">新增智能体</button>
             </div>
             <div id="agentConfigList" class="list compact"></div>
         </div>

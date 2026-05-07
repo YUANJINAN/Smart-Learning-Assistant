@@ -137,7 +137,9 @@ public class LearningAssistantService {
         if (!repository.courseExists(exercise.getCourseId())) {
             throw new IllegalArgumentException("课程不存在");
         }
-        return repository.saveExercise(exercise);
+        Exercise saved = repository.saveExercise(exercise);
+        repository.insertAuditLog(null, "SAVE_EXERCISE", "保存练习 " + saved.getId());
+        return saved;
     }
 
     @Transactional
