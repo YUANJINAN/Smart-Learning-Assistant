@@ -1,57 +1,44 @@
 # 智能学习助手数据库设计
 
-本项目运行环境使用 MySQL 数据库，启动时由 `schema.sql` 自动建表，由 `data.sql` 自动写入演示数据。
+本项目使用 MySQL 作为本地与部署环境的业务数据库。Spring Boot 启动时会加载 `backend/src/main/resources/application.properties`、`backend/src/main/resources/schema.sql` 和 `backend/src/main/resources/data.sql`；根目录下的 `database/` 保留同样的脚本，便于手动初始化数据库。
 
 ## 连接信息
 
-- 建库脚本: `docs/mysql-create-database.sql`
-- JDBC URL: `jdbc:mysql://localhost:3306/smart_learning_assistant?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true`
-- 默认用户名: `root`
-- 默认密码: `root`
-- 建表脚本: `src/main/resources/schema.sql`
-- 初始数据: `src/main/resources/data.sql`
+- 建库脚本：`docs/mysql-create-database.sql`
+- JDBC URL：`jdbc:mysql://localhost:3306/smart_learning_assistant?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true`
+- 默认数据库用户：`root`
+- 默认数据库密码：空密码；如本机 MySQL 设置了密码，请通过环境变量 `MYSQL_PASSWORD` 覆盖。
+- 学习者演示账号：`learner / learner123`
+- 管理员演示账号：`admin / admin123`
 
-连接信息可以通过环境变量覆盖：
+数据库连接可以通过环境变量覆盖：
 
 - `MYSQL_URL`
 - `MYSQL_USERNAME`
 - `MYSQL_PASSWORD`
 
-## 核心表
+## 核心数据表
 
-| 表名 | 说明 |
+| 表名 | 用途 |
 | --- | --- |
-| `user_accounts` | 用户账号，区分学习者和管理员 |
-| `learning_profiles` | 学习档案，保存目标、水平、每日学习时长 |
-| `profile_interests` | 学习兴趣，多值明细表 |
-| `profile_weak_points` | 薄弱点，多值明细表 |
-| `course_units` | 课程单元 |
-| `course_objectives` | 课程目标，多值明细表 |
-| `exercises` | 练习题主体 |
-| `exercise_options` | 练习选项，多值明细表 |
-| `exercise_results` | 用户提交和判分记录 |
-| `learning_plans` | 学习计划 |
-| `plan_tasks` | 计划任务，多值明细表 |
-| `knowledge_items` | 知识库条目 |
+| `user_accounts` | 系统运行账号，区分学习者和管理员。 |
+| `learning_profiles` | 学习档案，保存学习目标、水平、每日学习时长、兴趣和薄弱点。 |
+| `chat_session`、`chat_message` | 智能问答会话和消息历史。 |
+| `course_units`、`course_objectives` | 教学与练习流程使用的课程资源。 |
+| `exercises`、`exercise_options`、`exercise_results` | 练习题、选项、提交记录和批改结果。 |
+| `question`、`answer_record`、`wrong_question` | 设计文档中的题库、答题记录和错题本模型。 |
+| `learning_plans`、`plan_tasks`、`learning_task` | 学习计划和可执行的每日任务。 |
+| `learning_report` | 周报、月报、阶段复盘和下一步建议。 |
+| `knowledge_items`、`knowledge_resource` | 可检索知识条目和后台维护的知识资源。 |
+| `agent_configs`、`agent_consultations`、`agent_tasks` | 多智能体配置、咨询历史和后续任务。 |
+| `admin_user`、`role`、`permission`、`role_permission` | 管理员账号和 RBAC 权限结构。 |
+| `audit_logs`、`model_config` | 操作审计记录和 AI 模型策略配置。 |
 
-## 需求对应关系
+## 部署脚本
 
-| 需求模块 | 数据表 |
-| --- | --- |
-| 用户与学习档案 | `user_accounts`, `learning_profiles`, `profile_interests`, `profile_weak_points` |
-| 智能教学与练习 | `course_units`, `course_objectives`, `exercises`, `exercise_options`, `exercise_results` |
-| 计划与复习 | `learning_plans`, `plan_tasks`, `exercise_results` |
-| 知识库 | `knowledge_items` |
-| 后台管理 | 对用户、课程、练习、计划、知识库表进行统计 |
+- MySQL 建表脚本：`database/schema.sql`
+- MySQL 初始化数据：`database/init_data.sql`
+- H2 测试建表脚本：`backend/src/test/resources/test-schema.sql`
+- H2 测试初始化数据：`backend/src/test/resources/test-data.sql`
 
-## 持久化说明
-
-首次运行前先在 MySQL 中创建库：
-
-```sql
-CREATE DATABASE IF NOT EXISTS smart_learning_assistant
-    DEFAULT CHARACTER SET utf8mb4
-    DEFAULT COLLATE utf8mb4_unicode_ci;
-```
-
-应用启动后会自动执行 `schema.sql` 和 `data.sql`。测试环境使用 `src/test/resources` 下的 H2 兼容脚本，不影响正式 MySQL 配置。
+当前实现使用 JDBC Repository 承担可执行持久层，`entity` 和 `mapper` 包保留设计文档中的分层边界，便于课程设计验收时说明数据模型与业务模型的对应关系。
